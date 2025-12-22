@@ -5,7 +5,7 @@ This code base is using the [Julia Language](https://julialang.org/) and
 to make a reproducible scientific project named
 > TMI&MD
 
-It is authored by Chung, Guan.
+It is authored by Chung, Mohan, Dixit, and Guan.
 
 To (locally) reproduce this project, do the following:
 
