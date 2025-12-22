@@ -22,6 +22,9 @@ To (locally) reproduce this project, do the following:
 This will install all necessary packages for you to be able to run the scripts and
 everything should work out of the box, including correctly finding local paths.
 
+
+To reproduce the data, you will need to download the data from: https://utexas.box.com/s/9du7q74duhxnutlkz31g5f6wnmjxjcnc
+
 You may notice that most scripts start with the commands:
 ```julia
 using DrWatson
