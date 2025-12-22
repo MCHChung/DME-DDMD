@@ -39,4 +39,4 @@ ic_scores_2 = score_models(models_2, N, W, DW)
 
 # save data 
 neuron_models_and_scores = @strdict λzs models_1 models_2 ic_scores_1 ic_scores_2
-wsave(datadir("models", "neuron_models3.jld2" ), neuron_models_and_scores)
+#wsave(datadir("models", "neuron_models.jld2" ), neuron_models_and_scores)
