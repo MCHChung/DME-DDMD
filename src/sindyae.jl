@@ -42,6 +42,15 @@ function (l::SINDyLayer)(x::AbstractVector, ps, st::NamedTuple)
     return vec(y), st
 end
 
+function (l::SINDyLayer)(x::Array{Float64, 3}, ps, st::NamedTuple)
+    y = ps.weight * l.θ(x[:,:,1])
+   
+    for i=2:size(x,3)
+        y = cat(y, ps.weight * l.θ(x[:,:,i]), dims=3)
+    end
+    return y, st
+end
+
 # constructors to build layers
 function SINDyLayer(in_dims::Int, out_dims::Int, θ::Function; init_weight=glorot_uniform, init_bias=zeros32)
     return SINDyLayer{typeof(init_weight), typeof(init_bias)}(in_dims, out_dims, init_weight,
