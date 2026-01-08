@@ -88,7 +88,7 @@ function update_A!(Acat, H, V; niter=1)
 end
 
 function dynamic_nmf(
-    X,
+    X::Matrix,
     I;
     J=1,
     niter=100,
@@ -177,3 +177,160 @@ function forecast_observations(W, Hf; gamma=1.0)
     Xf = gamma .* (W * Hf)
     return Xf
 end
+
+
+# =================== TENSOR =================
+
+
+#const EPS = 1e-12
+
+function normalize_vector!(v)
+    s = sum(v)
+    s > 0 && (v ./= s)
+    v
+end
+
+function normalize_columns!(M)
+    for j in axes(M,2)
+        normalize_vector!(view(M,:,j))
+    end
+    M
+end
+
+function responsibilities(W, h)
+    Γ = W .* h'
+    Γ ./ (sum(Γ, dims=2) .+ EPS)
+end
+
+function update_W_tensor(X, Hs, W)
+    K, T, E = size(X)
+    I = size(W,2)
+
+    Wnew = zeros(K,I)
+
+    for e in 1:E
+        for t in 1:T
+            Γ = responsibilities(W, Hs[e][:,t])
+            Wnew .+= X[:,t,e] .* Γ
+        end
+    end
+
+    normalize_columns!(Wnew)
+end
+
+function predict_h(A, H, t)
+    I = size(H,1)
+    η = zeros(I)
+    for j in eachindex(A)
+        t - j ≥ 1 && (η .+= A[j] * H[:,t-j])
+    end
+    η .+ EPS
+end
+
+function update_h!(x, W, h, η; inner_iters=2)
+    I = length(h)
+
+    for _ in 1:inner_iters
+        Γ = responsibilities(W, h)
+        num = vec(sum(x .* Γ, dims=1))
+
+        β = 0.0
+        βmin = -minimum(1.0 ./ η) + 1e-6
+
+        for _ in 1:25
+            denom = max.(β .+ 1.0 ./ η, EPS)
+            f = sum(num ./ denom) - 1
+            df = -sum(num ./ denom.^2)
+            β -= f / (df + EPS)
+            β = max(β, βmin)
+        end
+
+        h .= num ./ (β .+ 1.0 ./ η)
+        h .= max.(h, EPS)
+        normalize_vector!(h)
+    end
+end
+
+function update_A_shared!(A, Hs)
+    I = size(Hs[1],1)
+    J = length(A)
+    E = length(Hs)
+    T = size(Hs[1],2)
+
+    V = zeros(I*J, E*T)
+    Hcat = zeros(I, E*T)
+
+    col = 1
+    for e in 1:E
+        H = Hs[e]
+        for t in 1:T
+            Hcat[:,col] .= H[:,t]
+            for j in 1:J
+                t-j ≥ 1 && (V[(j-1)*I+1:j*I, col] .= H[:,t-j])
+            end
+            col += 1
+        end
+    end
+
+    Acat = hcat(A...)
+    for _ in 1:1
+        AV = Acat * V .+ EPS
+        Acat .*= ((Hcat ./ AV.^2) * V') ./ ((1 ./ AV) * V')
+        Acat .= max.(Acat, EPS)
+    end
+
+    for j in 1:J
+        A[j] .= Acat[:, (j-1)*I+1:j*I]
+    end
+end
+
+function dynamic_nmf(
+    X::Array{<:Real, 3},            # K × T × E
+    I;
+    J=1,
+    niter=100,
+    M=50,
+    q=0.15,
+    seed=0,
+    iter = 100
+)
+    Random.seed!(seed)
+
+    K, T, E = size(X)
+
+    # --- PLCA scaling ---
+    X = copy(X)
+    for e in 1:E, t in 1:T
+        X[:,t,e] ./= sum(X[:,t,e]) + EPS
+        X[:,t,e] .*= 1000
+    end
+
+    # --- Init ---
+    W = rand(K,I)
+    normalize_columns!(W)
+
+    Hs = [normalize_columns!(rand(I,T)) for _ in 1:E]
+    A  = [rand(I,I) .+ 0.1 for _ in 1:J]
+
+    for r in 1:niter
+        r % iter == 0 ? println("Iteration $r") : nothing
+
+        # ---- Update W ----
+        W = update_W_tensor(X, Hs, W)
+
+        # ---- Update H (per experiment) ----
+        for e in 1:E
+            H = Hs[e]
+            for t in 1:T
+                η = r > M ? predict_h(A, H, t).^q : ones(I)
+                update_h!(X[:,t,e], W, view(H,:,t), η)
+            end
+        end
+
+        # ---- Update shared A ----
+        r ≥ M && update_A_shared!(A, Hs)
+    end
+
+    return W, Hs, A
+end
+
