@@ -8,7 +8,7 @@ include(srcdir("dynamic_nnmf.jl"))
 br_data = wload(datadir("sims", "brownian_data.jld2"))
 ou_data = wload(datadir("sims", "ou_data.jld2"))
 np_data = wload(datadir("sims", "np_data.jld2"))
-neuron_data = wload(datadir("sims", "neuron_data3.jld2"))
+neuron_data = wload(datadir("sims", "neuron_data.jld2"))
 
 Ks = collect(1:20)
 epochs = 1000
@@ -95,22 +95,3 @@ datadict = Dict(
 
 wsave(datadir("latent_dim", "dyn_nnmf.jld2"), datadict)
 
-# test 
-# brownian
-Kl = 5
-Wbr, Hbr, Abr = dynamic_nmf(Xbr, Kl; J=3, niter=1000, M=50, q=0.15, seed=0)
-
-p1 = heatmap(log10.(Xbr .+ 1e-4))
-p2 = heatmap(log10.(Wbr * Hbr .+ 1e-4))
-display(plot(p1,p2, layout=(1,2), size=(900,350)))
-
-
-# 
-# brownian
-Kl = 10
-Wne1, Hne1, Ane1= tensor_dynamic_nmf(Xne1, Kl; J=1, niter=1000, M=50, q=0.15, seed=0)
-
-ind = 2
-p1 = heatmap(log10.(Xne1[:,:,ind] .+ 1e-4))
-p2 = heatmap(log10.(Wne1 * Hne1[ind] .+ 1e-4)) 
-display(plot(p1,p2, layout=(1,2), size=(900,350)))
