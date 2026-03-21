@@ -9,6 +9,7 @@ from .models import TMI, TMIWithDynamics, TMIWithFeatureModel
 from .sparse import AdSR, EnAdSR
 from .library import poly_library
 from .losses import kld_loss
+from .galerkin import build_weight_matrix, build_disc_weight_matrix, build_poly_degree_matrix
 
 __all__ = [
     "TMI",
@@ -18,4 +19,7 @@ __all__ = [
     "EnAdSR",
     "poly_library",
     "kld_loss",
+    "build_weight_matrix",
+    "build_disc_weight_matrix",
+    "build_poly_degree_matrix",
 ]
