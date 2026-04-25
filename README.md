@@ -31,4 +31,4 @@ which auto-activate the project and enable local path handling from DrWatson.
 
 To reproduce the data, you will need to download the data folder from: https://utexas.box.com/s/9du7q74duhxnutlkz31g5f6wnmjxjcnc and include it when cloning this repo
 
-NOTE: This repo is solely for reproducing the results found in "Discovering interpretable low-dimensional dynamics using maximum entropy". For a general use package, see https://github.com/MCHChung/pyedwin , coming soon!!
+**NOTE**: This repo is solely for reproducing the results found in "Discovering interpretable low-dimensional dynamics using maximum entropy". For a general use package, see https://github.com/MCHChung/pyedwin , coming soon!!
